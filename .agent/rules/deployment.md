@@ -37,4 +37,4 @@ Staged path — don't jump straight to the heaviest option:
    both have native serverless triggers (Lambda event-source-mapping / Azure Function Service Bus trigger).
    RabbitMQ has no native serverless trigger, so this option doesn't apply until that broker decision is made, and
    even then it needs the separate entrypoint noted above — plus it has the weakest local/prod parity of the four,
-   since nothing about running a Lambda handler resembles `npm run start:dev` locally.
+   since nothing about running a Lambda handler resembles `yarn dev` locally.

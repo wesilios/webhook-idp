@@ -31,7 +31,7 @@ For chunks 1–4: an **implementer** subagent writes production code only (no te
 which files it created/changed. A **new, separate** tester subagent is then spawned — scoped to exactly those files
 — to write tests only (no production-code edits), in the same lane worktree so it can see and extend the
 implementer's exact files. The coordinator confirms build/lint/test are green (`.agent/rules/commands.md`) before
-starting the next chunk. See `.agent/skills/implementer-tester-chunk.md` and `.agent/skills/run-lane.md`.
+starting the next chunk. See `.agent/skills/implementer-tester-chunk/SKILL.md` and `.agent/skills/run-lane/SKILL.md`.
 
 Keeping each chunk to one layer — not the whole package — makes each handoff small enough for the tester to fully
 cover and gives the coordinator a natural point to catch scope drift early.
@@ -47,4 +47,4 @@ once both lanes exist is a separate follow-up integration step, never assumed in
 
 Lanes are built in parallel; merges into `main` happen one at a time. Before merging a lane: check its full diff
 against `terminology.md`, `architecture.md`, and the `ddd-boundary-check` skill, then merge and record the outcome
-in `.agent/status.md`. See `.agent/skills/review-and-merge-lane.md`.
+in `.agent/status.md`. See `.agent/skills/review-and-merge-lane/SKILL.md`.

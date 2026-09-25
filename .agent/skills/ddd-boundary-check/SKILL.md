@@ -1,3 +1,8 @@
+---
+name: ddd-boundary-check
+description: "Review pass catching domain-layer infrastructure imports and packages writing to a database they don't own, before merging changes to domain/, infrastructure/, or migrations"
+---
+
 # Skill: ddd-boundary-check
 
 **Purpose**: a review pass that catches the most common violations of `../rules/architecture.md` before they land:

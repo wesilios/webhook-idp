@@ -8,7 +8,7 @@ Subscription management for the Webhook Platform — the only component the **AP
 This package was rebuilt on **NestJS** against **MongoDB**, replacing the earlier Express + hexagonal/DDD + Awilix
 + Kysely/Postgres implementation, which has been **removed from the repo entirely** — no Postgres design is kept
 around, not even for reference. MongoDB's document model fits storing variable-shaped event bodies better than a
-fixed relational schema (see `CLAUDE.md`).
+fixed relational schema (see `.agent/rules/architecture.md`'s storage note).
 
 All four layers are built and wired end-to-end through NestJS's own module/DI system (Symbol-token ports bound in
 `providers`, no separate `composition/` folder — see `.agent/rules/architecture.md`):
@@ -52,15 +52,16 @@ the JSON that leaves the process is obscured.
 
 ## Development
 
-- `npm run build|lint|test --workspace packages/webhook-api` (from the repo root) — `build`/`start`/`start:dev` run
+- `yarn workspace webhook-api build|lint|test` (from the repo root) — `build`/`start`/`start:dev` run
   through the NestJS CLI (`nest build` / `nest start`), `lint` runs `oxlint` (this package's own `.oxlintrc.json`,
   not the root ESLint config), `test`/`test:e2e` run through vitest.
 - **Running the test suite**: unit tests (`vitest run`) need no database. Once a MongoDB-backed repository exists,
   its integration suite should start its own ephemeral MongoDB via `testcontainers` rather than requiring a
   manually-run `docker compose up`.
-- **Running the server locally** (`npm run start:dev`) needs a real, running MongoDB instance and a `MONGODB_URI`
-  env var (see `.env.example`; defaults to `mongodb://localhost:27017/webhook` if unset) — local MongoDB
-  provisioning (Docker, Atlas, etc.) is up to you, this repo doesn't ship a `docker-compose.yml` for it.
+- **Running the server locally** (`yarn dev webhook-api` from the root, or `yarn start:dev` here) needs a running
+  MongoDB and a `MONGODB_URI` env var (see `.env.example`; defaults to `mongodb://localhost:27017/webhook` if
+  unset) — `yarn infra:up` starts one in Docker. `yarn docker:up` runs the whole stack in containers instead (see
+  the root README's quickstart).
 - **API docs**: `@nestjs/swagger` is wired up (`main.ts`) — once the server is running, Swagger UI is at
   `/api/docs` and the raw OpenAPI JSON at `/api/docs-json`. Request DTOs (`CreateSubscriptionDto`,
   `UpdateSubscriptionDto`, `ListSubscriptionsQueryDto`) need no manual `@ApiProperty()` annotations — the

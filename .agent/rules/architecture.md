@@ -2,16 +2,17 @@
 
 ## Repo shape
 
-Single repo, npm workspaces (not pnpm — not installed in this environment), one shared MongoDB instance with a
-database (or collection namespace) per owning component. Each bounded-context package owns exactly one
-database/namespace; other packages may *read* it (via a published read-model type from `shared-kernel`) but must
-never write to a database/namespace they don't own.
+Single repo, Yarn 1.x (classic) workspaces — `yarn.lock` is the only lockfile, never `npm install` — one shared
+MongoDB instance with a database (or collection namespace) per owning component. Each bounded-context package owns
+exactly one database/namespace; other packages may *read* it (via a published read-model type from `shared-kernel`)
+but must never write to a database/namespace they don't own.
 
 ```
 node-webhook/
-  package.json                    # npm workspaces root
+  package.json                    # yarn workspaces root (+ `yarn dev`, `yarn docker:*` scripts)
   tsconfig.base.json
-  docker-compose.yml              # mongodb for local dev
+  docker-compose.yml              # local stack: mongodb + rabbitmq + every app image
+  scripts/dev.mjs                 # `yarn dev` local orchestrator
   packages/
     shared-kernel/                # EventType, SubscriptionId — kept minimal, grow only when 2+ packages need it
     webhook-api/                  # subscription CRUD REST API (NestJS; database: subscriptions)
@@ -19,6 +20,7 @@ node-webhook/
     event-ingestion-worker/       # database: inbox
     webhook-delivery-worker/      # database: delivery
     key-management/               # database: keys — used only by webhook-delivery-worker
+    idp/                          # sandbox publisher (no database) — simulates an Internal Service
 ```
 
 Migrations are **per-package**, not a single shared root folder — revised from the original plan once multi-agent

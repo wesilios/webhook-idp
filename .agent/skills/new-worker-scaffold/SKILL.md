@@ -1,3 +1,8 @@
+---
+name: new-worker-scaffold
+description: "Scaffold a new script-based worker package (event-ingestion-worker, webhook-delivery-worker, key-management) following the deployment runtime conventions"
+---
+
 # Skill: new-worker-scaffold
 
 **Purpose**: scaffold a new script-based worker package (`event-ingestion-worker`, `webhook-delivery-worker`, or
