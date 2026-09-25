@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import appConfiguration from './app.configuration.js';
 import { SandboxModule } from './sandbox-api/sandbox.module.js';
+import { VersionzController } from './versionz/versionz.controller.js';
 
 @Module({
   imports: [
@@ -11,7 +12,7 @@ import { SandboxModule } from './sandbox-api/sandbox.module.js';
     }),
     SandboxModule,
   ],
-  controllers: [],
+  controllers: [VersionzController],
   providers: [],
 })
 export class AppModule {}
