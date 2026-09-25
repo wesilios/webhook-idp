@@ -20,20 +20,18 @@ Centralized Webhook Delivery Service Management — see `README.md` for features
 
 Apply once the relevant package/code exists:
 
-- `.agent/skills/scaffold-use-case.md`
-- `.agent/skills/add-migration.md`
-- `.agent/skills/ddd-boundary-check.md`
-- `.agent/skills/local-env-up.md`
-- `.agent/skills/new-worker-scaffold.md`
-- `.agent/skills/implementer-tester-chunk.md` — the atomic per-chunk handoff within a lane
-- `.agent/skills/run-lane.md` — orchestrate a full lane through all its chunks
-- `.agent/skills/review-and-merge-lane.md` — integrate a finished lane into `main`
+- `.agent/skills/scaffold-use-case/SKILL.md`
+- `.agent/skills/add-migration/SKILL.md`
+- `.agent/skills/ddd-boundary-check/SKILL.md`
+- `.agent/skills/local-env-up/SKILL.md`
+- `.agent/skills/new-worker-scaffold/SKILL.md`
+- `.agent/skills/implementer-tester-chunk/SKILL.md` — the atomic per-chunk handoff within a lane
+- `.agent/skills/run-lane/SKILL.md` — orchestrate a full lane through all its chunks
+- `.agent/skills/review-and-merge-lane/SKILL.md` — integrate a finished lane into `main`
 
 ## Status
 
-System design (README.md event flow + C4 L1/L2 diagrams, terminology) is complete. `webhook-api` previously had a
-full DDD/hexagonal build on Express + Postgres merged to `main`; that implementation has been removed from the
-repo entirely (no Postgres design kept, even for reference) and `webhook-api` is being rebuilt from an early
-NestJS skeleton against MongoDB instead of Postgres (see `CLAUDE.md`'s Project status and
-`packages/webhook-api/README.md`'s Implementation status). `event-ingestion-worker`, `webhook-delivery-worker`, and
-`key-management` are not started. See `.agent/status.md` for the live per-lane status.
+System design (README.md event flow + C4 L1/L2 diagrams, terminology) is complete. `webhook-api` (NestJS/MongoDB,
+all four layers) and `event-ingestion-worker` (RabbitMQ → `inbox` database) are built and merged, and `idp` is a
+sandbox publisher for exercising the ingestion path end-to-end. `webhook-delivery-worker` exists as a design README
+only; `key-management` is not started. See `.agent/status.md` for the live per-lane status.

@@ -1,39 +1,49 @@
 # Commands
 
-Verified working in this repo (npm workspaces root). Update this file whenever a script is added, renamed, or a
-new package is scaffolded — it should always reflect commands that actually run, not aspirational ones.
+Verified working in this repo (Yarn 1.x classic workspaces root — `yarn.lock` is the only lockfile; never run
+`npm install`). Update this file whenever a script is added, renamed, or a new package is scaffolded — it should
+always reflect commands that actually run, not aspirational ones.
 
 ## Root (all packages)
 
-- `npm install` — installs dependencies for every workspace package.
-- `npm run build` — runs each package's `build` script (`--workspaces --if-present`).
-- `npm run lint` — runs the root ESLint flat config (`eslint.config.js`) over the whole repo.
-- `npm run format` — checks Prettier formatting (`prettier --check .`); use `npx prettier --write .` to fix.
-- `npm run test` — runs each package's `test` script (`--workspaces --if-present`).
+- `yarn install` — installs dependencies for every workspace package (and the husky pre-commit hook).
+- `yarn dev [app...]` — local orchestrator (`scripts/dev.mjs`): starts every workspace with a `start:dev` script
+  (or only the named ones) in watch mode, prefixes logs per app, and prints a status table (kind, state,
+  URL/port, Swagger, pid) plus MongoDB/RabbitMQ reachability. Refuses duplicate `PORT`s. `s`+Enter reprints
+  status, `q`+Enter / Ctrl+C stops everything.
+- `yarn setup:claude` — creates the gitignored local symlinks Claude Code needs (`CLAUDE.md` → `AGENT.md`,
+  `.claude/skills` → `.agent/skills`); idempotent.
+- `yarn build` / `yarn test` — `yarn workspaces run build|test` (every workspace must define the script).
+- `yarn lint` — root ESLint flat config (`eslint.config.js`) over the whole repo; `yarn lint:packages` — each
+  package's own oxlint.
+- `yarn format` — `prettier --check .`; use `yarn prettier --write .` to fix.
 
-## Single package (e.g. `webhook-api`)
+## Docker (`docker-compose.yml`, root)
 
-Scope any root script to one workspace with `--workspace <path>` (or `-w <path>`):
+- `yarn infra:up` / `yarn infra:down` — only MongoDB (27017) + RabbitMQ (5672, UI 15672), for use with `yarn dev`.
+- `yarn docker:up` — build every package image and start infra + apps (`--wait` for health); `yarn docker:ps`,
+  `yarn docker:logs`, `yarn docker:down`.
+- Each deployable package has its own `Dockerfile`, built from the repo root:
+  `docker build -f packages/<name>/Dockerfile -t <name> .`. When adding a workspace package, add its
+  `package.json` `COPY` line to the `deps` stage of every package Dockerfile (needed for `--frozen-lockfile`).
 
-- `npm run build --workspace packages/webhook-api`
-- `npm run lint --workspace packages/webhook-api`
-- `npm run test --workspace packages/webhook-api`
-- `npm install -D <package> --workspace packages/webhook-api` — add a dev dependency to just that package.
+## Single package
 
-## Inside `packages/webhook-api` directly
+- `yarn workspace <name> <script>` — e.g. `yarn workspace webhook-api test:e2e`.
+- `yarn workspace <name> add [-D] <dep>` — add a (dev) dependency to just that package.
 
-- `npx nest build` — type-check/build (NestJS CLI).
-- `npx nest start --watch` — run the dev server with reload.
-- `npx vitest run` — run the full unit test suite once.
-- `npx vitest run --config ./vitest.config.e2e.ts` — run the e2e suite.
-- `npx vitest run -t "<test name>"` — run tests matching a name pattern.
-- `npx oxlint --type-aware src/ test/` — lint just this package (oxlint, not ESLint, per this package's own
-  `.oxlintrc.json` — root `npm run lint` still covers the rest of the workspace via the root ESLint flat config).
+## Inside a package directly (`webhook-api`, `event-ingestion-worker`, `idp`)
+
+- `yarn build` — `nest build` then `tsc-alias -p tsconfig.build.json` to rewrite path aliases (`idp` has no
+  aliases, so its `build` is just `nest build`). Plain `nest build` leaves `@domain/...` specifiers unresolvable
+  at runtime.
+- `yarn start:dev` — run the app with reload (reads the package's `.env`).
+- `yarn test` — full unit suite once (`vitest run`); `yarn test:e2e` — the e2e suite;
+  `yarn vitest run -t "<test name>"` — tests matching a name.
+- `yarn lint` — `oxlint --type-aware src/ test/` (this package's own `.oxlintrc.json`; root `yarn lint` still covers
+  the rest of the workspace via ESLint).
 
 ## Not available yet
 
-No `docker-compose.yml` or migration commands exist yet — the current `src/` is an early NestJS skeleton wired to
-connect to MongoDB via `@nestjs/mongoose` (`MONGODB_URI` env var), but no schema/repository/use-case code has been
-rebuilt against it (see `CLAUDE.md`'s Project status). Don't assume `npm run migrate` or a local DB works until
-those are scaffolded. The prior Postgres-backed implementation (Express + Kysely + `node-pg-migrate`) has been
-removed from the repo entirely, not kept for reference.
+No migration commands exist — indexes currently come from the Mongoose schemas, not a migration tool. Don't assume
+`yarn migrate` works until one is scaffolded.

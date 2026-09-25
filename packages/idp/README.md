@@ -40,8 +40,8 @@ integrate first.
 
 ## Development
 
-- `npm run build|lint|test --workspace packages/idp` (from the repo root).
-- `npm run start:dev --workspace packages/idp` — needs `PORT` (defaults to `3000`), `RABBIT_MQ_CONN`/
+- `yarn workspace idp build|lint|test` (from the repo root).
+- `yarn dev idp` (root orchestrator) or `yarn workspace idp start:dev` — needs `PORT` (`.env.example`: `4322`), `RABBIT_MQ_CONN`/
   `RABBIT_MQ_QUEUE` (see `.env.example`) pointed at the same broker/queue `event-ingestion-worker` consumes
   from, and `APPLICATION_NAME` (scopes the generated `eventId`).
 

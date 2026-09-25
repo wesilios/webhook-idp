@@ -41,39 +41,124 @@ what's built so far."
 
 ## How to use (quickstart)
 
-**Prerequisites**
+### Prerequisites
 
-- Node.js `v22.22.3` (see `.nvmrc`)
-- npm (workspaces — this is a monorepo, not a package split across separate repos)
-- A MongoDB instance you control the connection string for — this repo does not ship a `docker-compose.yml` yet, so
-  provision one yourself (local Docker, MongoDB Atlas, etc.)
+- Node.js `v22.22.3` (`nvm use` picks it up from `.nvmrc`)
+- Yarn `1.22.x` (classic) — the monorepo uses **Yarn workspaces**; don't mix in `npm install` (there is no
+  `package-lock.json`, `yarn.lock` is the only lockfile)
+- Docker with Docker Compose v2 — for MongoDB/RabbitMQ, or to run the whole stack in containers
 
-**Setup**
+### 1. Install
 
 ```bash
 git clone <this repo>
-cd node-webhook
-npm install          # installs all workspace packages from the root
+cd <repo>
+nvm use
+yarn install          # installs every workspace package from the root (also sets up the husky pre-commit hook)
 ```
 
-**Running a package locally** — each package has its own `.env.example` and `start:dev` script:
+### 2. Configure each app
+
+Every runnable package has its own `.env.example`. Copy it once:
 
 ```bash
-cd packages/<package-name>
-cp .env.example .env
-npm run start:dev      # from the repo root: npm run start:dev --workspace packages/<package-name>
+for p in webhook-api event-ingestion-worker idp; do cp -n packages/$p/.env.example packages/$p/.env; done
 ```
 
-`webhook-api` and `idp` also serve Swagger UI at `/api/docs` once running. See each package's own README for its
-exact env vars, API surface, and any external dependencies it needs (MongoDB, a running RabbitMQ, etc.).
+The defaults already fit together: distinct HTTP ports (`webhook-api` → 4321, `idp` → 4322), MongoDB on
+`localhost:27017`, RabbitMQ on `localhost:5672`, and the same `RABBIT_MQ_QUEUE` (`webhook.events`) for the `idp`
+publisher and the `event-ingestion-worker` consumer.
 
-**Workspace-wide commands** (from the repo root, run across every package that defines the script):
+### 3a. Run everything on the host — `yarn dev` (recommended for development)
 
 ```bash
-npm run build   # npm run build --workspaces --if-present
-npm run lint    # eslint . (root config) — packages may also define their own stricter oxlint config
-npm run test    # npm run test --workspaces --if-present
+yarn dev              # start every app in watch mode
 ```
+
+`yarn dev` doesn't start MongoDB or RabbitMQ itself. It only needs them to be reachable at the addresses in each
+package's `.env` (by default `localhost:27017` and `localhost:5672`). Run them however suits your machine: a
+systemd `mongod`, your own RabbitMQ container, or `yarn infra:up` to start both from `docker-compose.yml`. The
+status report shows whether each one is reachable.
+
+`yarn dev` (`scripts/dev.mjs`) finds every workspace package that has a `start:dev` script and starts them
+together, so it picks up new packages without extra config. Each log line starts with the app's name, and once the
+apps are up it prints a status report:
+
+```text
+━━━ Apps ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  APP                      KIND     STATE     ENDPOINT                       SWAGGER                          PID
+  event-ingestion-worker   worker   running   no HTTP listener               —                                31777
+  idp                      http     ready     http://localhost:4322          http://localhost:4322/api/docs   31781
+  webhook-api              http     ready     http://localhost:4321/api/v1   http://localhost:4321/api/docs   31788
+
+━━━ Dependencies ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  SERVICE    ADDRESS           STATUS      USED BY
+  MongoDB    localhost:27017   reachable   event-ingestion-worker, webhook-api
+  RabbitMQ   localhost:5672    reachable   event-ingestion-worker, idp
+```
+
+- **Only some apps**: `yarn dev webhook-api idp`
+- **While it's running**: type `s` + Enter to reprint the status, `q` + Enter or Ctrl+C to stop every app.
+  Afterwards a one-line notice reports each state change (for example, an app restarting after a watch-mode
+  rebuild, or exiting).
+- **Before starting**, it stops with an error if two apps are set to the same `PORT`. It skips any app whose port is
+  already taken, and warns if an app has no `.env` (it falls back to `.env.example`).
+- **How it works out each app**: an app is `http` if its `src/main.ts` calls `.listen(`. Its port is `PORT` from the
+  package `.env`. The Swagger and API-prefix paths are also read from `main.ts`. HTTP apps are `ready` once their
+  port accepts connections.
+- **Stop the infra** afterwards with `yarn infra:down` (data is kept in Docker volumes).
+
+### 3b. Run everything in Docker — `yarn docker:up`
+
+```bash
+yarn docker:up        # build all images and start infra + apps (waits until healthy)
+yarn docker:ps        # what's running, and on which ports
+yarn docker:logs      # follow logs of every container
+yarn docker:down      # stop and remove the containers (add -v to also drop the data volumes)
+```
+
+| Service | Host address | Notes |
+|---|---|---|
+| `webhook-api` | http://localhost:4321/api/v1 — Swagger at `/api/docs` | |
+| `idp` | http://localhost:4322 — Swagger at `/api/docs` | `POST /sandbox` publishes a test event |
+| `event-ingestion-worker` | — | no HTTP listener; consumes `webhook.events` |
+| MongoDB | `mongodb://localhost:27017` | database per component (`subscriptions`, `inbox`, …) |
+| RabbitMQ | `amqp://localhost:5672`, management UI http://localhost:15672 | `guest` / `guest` |
+
+The host ports match the `.env.example` defaults, so 3a and 3b are interchangeable — just don't run both at once.
+Inside Docker the apps use service names (`mongodb`, `rabbitmq`) instead of `localhost`; that config lives in
+`docker-compose.yml`, not in the package `.env` files. Each package has its own `Dockerfile` (built from the repo
+root, since it needs the shared `yarn.lock`), which is the same image a per-component deployment would use.
+
+### Try the pipeline end-to-end
+
+With either option running, publish a sandbox event through `idp` and watch `event-ingestion-worker` store it as an
+Inbox record:
+
+```bash
+curl -X POST http://localhost:4322/sandbox \
+  -H 'Content-Type: application/json' \
+  -d '{"tenantId":"tenant-1","eventType":"order.created","payload":{"orderId":"123"}}'
+```
+
+See `packages/idp/README.md` for the envelope contract, and each package's own README for its env vars and API
+surface.
+
+### Workspace-wide commands
+
+Run from the repo root:
+
+```bash
+yarn build            # yarn workspaces run build — nest build (+ tsc-alias) in every package
+yarn test             # yarn workspaces run test — vitest unit suites, no database needed
+yarn lint             # root ESLint flat config over the whole repo
+yarn lint:packages    # each package's own oxlint config
+yarn format           # prettier --check .
+```
+
+To target one package: `yarn workspace <name> <script>` (e.g. `yarn workspace webhook-api test:e2e`), or run
+`yarn <script>` inside `packages/<name>`. Add a dependency to one package with
+`yarn workspace <name> add <dep>` (`-D` for dev dependencies).
 
 ## Developer guideline (local)
 
@@ -145,5 +230,8 @@ README):
 
 This project uses an AI coding assistant (Claude Code) throughout — for drafting design docs like this one and
 `architecture.md`, scaffolding package structure, and implementing code against the conventions in
-`.agent/rules/`. All direction, review, and decisions are mine; this note is here for transparency, and because
-learning to work effectively _with_ an AI assistant is itself part of what this project is practicing.
+`.agent/rules/`. Agent guidance lives in tool-agnostic files, `AGENT.md` and `.agent/` (rules + skills). If you
+use Claude Code, run `yarn setup:claude` once: it creates gitignored local symlinks (`CLAUDE.md`,
+`.claude/skills`) so Claude Code picks them up. All direction, review, and decisions are mine; this note is here
+for transparency, and because learning to work effectively _with_ an AI assistant is itself part of what this
+project is practicing.

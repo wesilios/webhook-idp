@@ -7,16 +7,27 @@
   "author": "Que Nguyen <quenguyen10190@gmail.com>",
   "license": "MIT",
   "engines": {
-    "node": ">=22.19.0"
+    "node": ">=22.22.3",
+    "yarn": ">=1.22 <2"
   },
+  "packageManager": "yarn@1.22.22",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
+    "dev": "node scripts/dev.mjs",
+    "setup:claude": "node scripts/setup-claude.mjs",
+    "build": "yarn workspaces run build",
     "lint": "eslint .",
+    "lint:packages": "yarn workspaces run lint",
     "format": "prettier --check .",
-    "test": "npm run test --workspaces --if-present",
+    "test": "yarn workspaces run test",
+    "infra:up": "docker compose up -d --wait mongodb rabbitmq",
+    "infra:down": "docker compose stop mongodb rabbitmq",
+    "docker:up": "docker compose up -d --build --wait",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:ps": "docker compose ps",
     "prepare": "husky"
   },
   "devDependencies": {

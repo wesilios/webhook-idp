@@ -1,3 +1,8 @@
+---
+name: review-and-merge-lane
+description: "Integrate a finished lane's worktree back into main once every chunk is green"
+---
+
 # Skill: review-and-merge-lane
 
 **Purpose**: integrate a finished lane's worktree back into `main` once every chunk (per `run-lane`) is green.

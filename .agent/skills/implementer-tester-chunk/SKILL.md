@@ -1,3 +1,8 @@
+---
+name: implementer-tester-chunk
+description: "Atomic two-subagent handoff for one lane chunk: an implementer writes one layer's production code, then a fresh tester subagent writes its tests"
+---
+
 # Skill: implementer-tester-chunk
 
 **Purpose**: the atomic two-subagent handoff used for every chunk of a lane (see

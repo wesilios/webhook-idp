@@ -1,3 +1,8 @@
+---
+name: scaffold-use-case
+description: "Generate a new hexagonal use case with a passing unit test for an existing aggregate in a bounded-context package"
+---
+
 # Skill: scaffold-use-case
 
 **Purpose**: generate a new use case for a bounded-context package following the hexagonal pattern in

@@ -6,5 +6,7 @@ coverage/
 .env
 .env.*
 !.env.example
-CLAUDE.md
 
+# Claude Code pointers to AGENT.md / .agent/skills — local symlinks, created by `yarn setup:claude`
+CLAUDE.md
+.claude/

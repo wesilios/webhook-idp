@@ -1,3 +1,8 @@
+---
+name: run-lane
+description: "Orchestrate a full package lane through all its chunks via repeated implementer-tester-chunk handoffs, or resume one partway through"
+---
+
 # Skill: run-lane
 
 **Purpose**: orchestrate a full package lane from nothing to a merge-ready worktree, by driving the standard chunk
@@ -18,4 +23,4 @@ order through repeated `implementer-tester-chunk` handoffs.
    each advance, updating `.agent/status.md`'s "Current chunk" after every handoff.
 4. Chunk 5 (Docs): write (or have the coordinator write) the lane's `README.md` following
    `packages/webhook-api/README.md`'s structure (Analysis, contract design, diagrams). No tester step.
-5. Once all 5 chunks are done, hand off to `.agent/skills/review-and-merge-lane.md` for integration into `main`.
+5. Once all 5 chunks are done, hand off to `.agent/skills/review-and-merge-lane/SKILL.md` for integration into `main`.
