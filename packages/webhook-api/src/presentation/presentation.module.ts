@@ -9,10 +9,11 @@ import {
   TargetUrlMaskingInterceptor,
 } from './common/interceptors/index.js';
 import { SubscriptionsController } from './subscriptions/subscriptions.controller.js';
+import { VersionzController } from './versionz/versionz.controller.js';
 
 @Module({
   imports: [ApplicationModule],
-  controllers: [SubscriptionsController],
+  controllers: [SubscriptionsController, VersionzController],
   providers: [
     IdentityGuard,
     PaginationInterceptor,
