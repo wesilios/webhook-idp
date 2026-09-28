@@ -1,0 +1,40 @@
+name: Unit tests
+
+# Runs every workspace's unit suite (`yarn test` → `yarn workspaces run test`) on each PR into master, and again on
+# master after the merge. The unit suites run against in-memory fakes and mocked broker clients, so no MongoDB or
+# RabbitMQ service is needed here.
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+# A newer push to the same PR supersedes the running check; runs on master are never cancelled.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    name: yarn test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Skip installing the local husky git hooks during `yarn install` (its `prepare` script).
+      HUSKY: 0
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --non-interactive
+
+      - name: Run unit tests
+        run: yarn test

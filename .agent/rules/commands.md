@@ -18,6 +18,13 @@ always reflect commands that actually run, not aspirational ones.
   package's own oxlint.
 - `yarn format` — `prettier --check .`; use `yarn prettier --write .` to fix.
 
+## CI (`.github/workflows/`)
+
+- `codetest.yml` — `yarn install --frozen-lockfile` then `yarn test` on Node from `.nvmrc`, for every pull request into
+  `master` and every push to `master` (i.e. after a merge). No MongoDB/RabbitMQ service is provisioned, so unit
+  suites must use fakes/mocks. A newer push to the same PR cancels the older run.
+- `codeql.yml` — CodeQL security analysis (PRs, pushes to `master`, weekly).
+
 ## Docker (`docker-compose.yml`, root)
 
 - `yarn infra:up` / `yarn infra:down` — only MongoDB (27017) + RabbitMQ (5672, UI 15672), for use with `yarn dev`.
