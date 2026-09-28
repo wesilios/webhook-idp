@@ -29,13 +29,13 @@ Consumer Endpoints. See `README.md` for the event flow and C4 diagrams.
 
 ## Packages (Yarn workspaces under `packages/`)
 
-| Package | State | Notes |
-|---|---|---|
-| `webhook-api` | built (all 4 layers) | NestJS REST API, `/api/v1/subscriptions`; MongoDB database `subscriptions`; Swagger at `/api/docs` |
-| `event-ingestion-worker` | built | NestJS application context (no HTTP listener); consumes RabbitMQ, writes idempotent Inbox records to MongoDB (`inbox`); layers `domain/application/infrastructure/runtime` |
-| `idp` | sandbox | `POST /sandbox` publishes a hand-built event envelope to RabbitMQ to exercise the ingestion worker end-to-end |
-| `webhook-delivery-worker` | README/design only | no code yet |
-| `key-management` | not started | owns signing keys; only consumed by `webhook-delivery-worker` |
+| Package                   | State                | Notes                                                                                                                                                                      |
+| ------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `webhook-api`             | built (all 4 layers) | NestJS REST API, `/api/v1/subscriptions`; MongoDB database `subscriptions`; Swagger at `/api/docs`                                                                         |
+| `event-ingestion-worker`  | built                | NestJS application context (no HTTP listener); consumes RabbitMQ, writes idempotent Inbox records to MongoDB (`inbox`); layers `domain/application/infrastructure/runtime` |
+| `idp`                     | sandbox              | `POST /sandbox` publishes a hand-built event envelope to RabbitMQ to exercise the ingestion worker end-to-end                                                              |
+| `webhook-delivery-worker` | README/design only   | no code yet                                                                                                                                                                |
+| `key-management`          | not started          | owns signing keys; only consumed by `webhook-delivery-worker`                                                                                                              |
 
 Each package's `README.md` has its detailed design and implementation status.
 
@@ -69,6 +69,8 @@ Full list in `.agent/rules/commands.md`. Root:
 - `yarn build` / `yarn test` — every workspace; `yarn lint` — root ESLint; `yarn lint:packages` — per-package
   oxlint; `yarn format` — Prettier check
 - Husky pre-commit runs `lint-staged` (ESLint on staged JS/TS)
+- CI: `.github/workflows/codetest.yml` runs `yarn test` on every PR into `master` and on pushes to `master`; keep unit
+  suites free of MongoDB/RabbitMQ so they pass there
 
 Per package: `yarn workspace <name> <script>` (or `yarn <script>` inside the package):
 

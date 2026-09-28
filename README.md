@@ -117,13 +117,14 @@ yarn docker:logs      # follow logs of every container
 yarn docker:down      # stop and remove the containers (add -v to also drop the data volumes)
 ```
 
-| Service | Host address | Notes |
-|---|---|---|
-| `webhook-api` | http://localhost:4321/api/v1 — Swagger at `/api/docs` | `GET /versionz` (root, no prefix) |
-| `idp` | http://localhost:4322 — Swagger at `/api/docs` | `POST /sandbox` publishes a test event; `GET /versionz` |
-| `event-ingestion-worker` | — | no HTTP listener; consumes `webhook.events` |
-| MongoDB | `mongodb://localhost:27017` | database per component (`subscriptions`, `inbox`, …) |
-| RabbitMQ | `amqp://localhost:5672`, management UI http://localhost:15672 | `guest` / `guest` |
+| Service                  | Host address                                                  | Notes                                                    |
+| ------------------------ | ------------------------------------------------------------- | -------------------------------------------------------- |
+| `webhook-api`            | http://localhost:4321/api/v1 — Swagger at `/api/docs`         | `GET /versionz` (root, no prefix)                        |
+| `idp`                    | http://localhost:4322 — Swagger at `/api/docs`                | `POST /sandbox` publishes a test event; `GET /versionz`  |
+| `event-ingestion-worker` | —                                                             | no HTTP listener; consumes `webhook.events`              |
+| MongoDB                  | `mongodb://localhost:27017`                                   | database per component (`subscriptions`, `inbox`, …)     |
+| RabbitMQ                 | `amqp://localhost:5672`, management UI http://localhost:15672 | `guest` / `guest`                                        |
+
 
 The host ports match the `.env.example` defaults, so 3a and 3b are interchangeable — just don't run both at once.
 Inside Docker the apps use service names (`mongodb`, `rabbitmq`) instead of `localhost`; that config lives in
@@ -172,7 +173,8 @@ To target one package: `yarn workspace <name> <script>` (e.g. `yarn workspace we
   MongoDB (via `testcontainers`, not a mocked DB) — see `webhook-api`'s README for the concrete commands.
 - **Linting/formatting**: each package may define its own `oxlint` config; the root ESLint flat config + Prettier
   cover everything else in the workspace.
-- **Deployment/CI**: one shared CI workflow lints/tests every package on each push; deployment is per-component
+- **Deployment/CI**: `.github/workflows/codetest.yml` runs `yarn test` (every package's unit suite) on each pull request
+  into `master` and again on `master` after the merge, and CodeQL scans the code. Deployment is per-component
   (each package gets its own Dockerfile and deploy pipeline, triggered by path filters) — see
   [`.agent/rules/deployment.md`](.agent/rules/deployment.md).
 
