@@ -233,6 +233,14 @@ Base path: `/api/v1/subscriptions`.
 All request bodies use camelCase (`targetUrl`, `eventTypes`, `status`) — only _responses_ are PascalCase, per the
 [Response envelope](#response-envelope) contract.
 
+**Diagnostics — `GET /versionz`**: served at the root, **outside** the `/api/v1` prefix (excluded in
+`src/app.setup.ts`), unauthenticated. It returns the running build so you can check which version is deployed in
+each environment. The version comes from the `VERSION` env var (`"unknown"` if unset):
+
+```json
+{ "Data": { "Service": "webhook-api", "Version": "1.0.0" }, "StatusCode": 200, "Code": "OK", "Message": "OK", "Errors": [] }
+```
+
 **POST /subscriptions** request:
 
 ```json

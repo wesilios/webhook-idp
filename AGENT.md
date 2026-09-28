@@ -52,6 +52,8 @@ Each package's `README.md` has its detailed design and implementation status.
 - ESM (`"type": "module"`): relative imports use the `.js` extension.
 - Durability lives in MongoDB, never the broker; consumption and delivery must be idempotent; processes are
   stateless; outgoing webhooks are signed with asymmetric keys (RSA/ECDSA), never HMAC.
+- Every HTTP app exposes an unauthenticated `GET /versionz` at the root, outside any global prefix, returning its
+  service name and the `VERSION` env var (`"unknown"` if unset). Add it to any new HTTP package.
 - A package writes only to its own database (`subscriptions`, `inbox`, `delivery`, `keys`).
 - `webhook-api` never touches signing key material.
 

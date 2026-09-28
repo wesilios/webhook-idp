@@ -89,6 +89,11 @@ type/publisher — a document store lets it be embedded as-is instead of forcing
   successful controller return values into `ApiEnvelope` automatically. Once that lands, controllers just return
   plain data or throw, and `src/base.controller.ts`'s `sendSuccess()`/`sendError()` becomes unnecessary — it is not
   removed yet, that's a later interface-layer chunk, this is just the documented plan.
+- **Diagnostics**: every HTTP app serves `GET /versionz` at the root, excluded from any global prefix
+  (`setGlobalPrefix(prefix, { exclude: ['versionz'] })`). It is unauthenticated and returns only the service name and
+  the `VERSION` env var (`"unknown"` if unset), read through `ConfigService` (`version` key in
+  `app.configuration.ts`), so anyone can check which build runs in an environment. It follows the package's normal
+  response conventions (enveloped in `webhook-api`).
 - Composition root: **Nest's own module/DI system**, not a separate file — each feature module's
   `@Module({ providers: [...] })` array (e.g. `webhook/webhook.module.ts`) *is* the composition root. There is no
   `composition/` folder going forward; see [Dependency injection](#dependency-injection) below for the binding

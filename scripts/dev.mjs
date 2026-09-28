@@ -88,11 +88,37 @@ function workspaceDirs() {
   return dirs.filter((dir) => existsSync(path.join(dir, 'package.json')));
 }
 
+/** Top-level `src/*.ts` files (not specs) — where Nest bootstrap code such as `main.ts` / `app.setup.ts` lives. */
+function readBootstrapSources(dir) {
+  const src = path.join(dir, 'src');
+  if (!existsSync(src)) return '';
+  return readdirSync(src)
+    .filter((file) => file.endsWith('.ts') && !file.endsWith('.spec.ts'))
+    .map((file) => readFileSync(path.join(src, file), 'utf8'))
+    .join('\n');
+}
+
+/**
+ * First argument of a call like `setGlobalPrefix('api/v1')`, also following a same-source string constant
+ * (`setGlobalPrefix(GLOBAL_PREFIX)` with `const GLOBAL_PREFIX = 'api/v1'`). Leading `/` is dropped.
+ */
+function resolveStringArg(source, callee) {
+  const escaped = callee.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const call = source.match(
+    new RegExp(`${escaped}\\(\\s*(?:['"\`]([^'"\`]+)['"\`]|([A-Za-z_$][\\w$]*))`),
+  );
+  if (!call) return undefined;
+  const value =
+    call[1] ?? source.match(new RegExp(`const\\s+${call[2]}\\s*=\\s*['"\`]([^'"\`]+)['"\`]`))?.[1];
+  return value?.replace(/^\//, '');
+}
+
 /**
  * Builds an app descriptor from a package. Kind/port/docs are inferred from the package's own files rather than a
  * separate manifest, so a new package shows up here with no extra config: it is an HTTP app if `src/main.ts` calls
  * `.listen(`, its port is `PORT` from the package's `.env` (falling back to `.env.example`, then Nest's 3000
- * default used by every `main.ts`), and its Swagger/global-prefix paths are read from `main.ts` too.
+ * default used by every `main.ts`), and its Swagger/global-prefix paths are read from the top-level `src/*.ts`
+ * bootstrap files (`main.ts`, `app.setup.ts`, ...).
  */
 function describeApp(dir, index) {
   const pkg = readJson(path.join(dir, 'package.json'));
@@ -104,8 +130,9 @@ function describeApp(dir, index) {
   const main = existsSync(mainFile) ? readFileSync(mainFile, 'utf8') : '';
   const isHttp = /\.listen\(/.test(main);
   const port = isHttp ? Number(env.PORT || 3000) : null;
-  const docsPath = main.match(/SwaggerModule\.setup\(\s*['"`]\/?([^'"`]+)/)?.[1];
-  const apiPrefix = main.match(/setGlobalPrefix\(\s*['"`]\/?([^'"`]+)/)?.[1];
+  const bootstrap = readBootstrapSources(dir);
+  const docsPath = resolveStringArg(bootstrap, 'SwaggerModule.setup');
+  const apiPrefix = resolveStringArg(bootstrap, 'setGlobalPrefix');
 
   return {
     name: pkg.name,

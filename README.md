@@ -117,13 +117,14 @@ yarn docker:logs      # follow logs of every container
 yarn docker:down      # stop and remove the containers (add -v to also drop the data volumes)
 ```
 
-| Service                  | Host address                                                  | Notes                                                |
-| ------------------------ | ------------------------------------------------------------- | ---------------------------------------------------- |
-| `webhook-api`            | http://localhost:4321/api/v1 — Swagger at `/api/docs`         |                                                      |
-| `idp`                    | http://localhost:4322 — Swagger at `/api/docs`                | `POST /sandbox` publishes a test event               |
-| `event-ingestion-worker` | —                                                             | no HTTP listener; consumes `webhook.events`          |
-| MongoDB                  | `mongodb://localhost:27017`                                   | database per component (`subscriptions`, `inbox`, …) |
-| RabbitMQ                 | `amqp://localhost:5672`, management UI http://localhost:15672 | `guest` / `guest`                                    |
+| Service                  | Host address                                                  | Notes                                                    |
+| ------------------------ | ------------------------------------------------------------- | -------------------------------------------------------- |
+| `webhook-api`            | http://localhost:4321/api/v1 — Swagger at `/api/docs`         | `GET /versionz` (root, no prefix)                        |
+| `idp`                    | http://localhost:4322 — Swagger at `/api/docs`                | `POST /sandbox` publishes a test event; `GET /versionz`  |
+| `event-ingestion-worker` | —                                                             | no HTTP listener; consumes `webhook.events`              |
+| MongoDB                  | `mongodb://localhost:27017`                                   | database per component (`subscriptions`, `inbox`, …)     |
+| RabbitMQ                 | `amqp://localhost:5672`, management UI http://localhost:15672 | `guest` / `guest`                                        |
+
 
 The host ports match the `.env.example` defaults, so 3a and 3b are interchangeable — just don't run both at once.
 Inside Docker the apps use service names (`mongodb`, `rabbitmq`) instead of `localhost`; that config lives in

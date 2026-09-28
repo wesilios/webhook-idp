@@ -44,6 +44,8 @@ integrate first.
 - `yarn dev idp` (root orchestrator) or `yarn workspace idp start:dev` — needs `PORT` (`.env.example`: `4322`), `RABBIT_MQ_CONN`/
   `RABBIT_MQ_QUEUE` (see `.env.example`) pointed at the same broker/queue `event-ingestion-worker` consumes
   from, and `APPLICATION_NAME` (scopes the generated `eventId`).
+- `GET /versionz` — unauthenticated diagnostics endpoint returning `{ "service": "idp", "version": "<VERSION>" }`
+  (the `VERSION` env var, `"unknown"` if unset), for checking which build is deployed in an environment.
 
 ## Reference
 
